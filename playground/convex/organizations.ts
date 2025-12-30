@@ -8,7 +8,7 @@ import { v } from 'convex/values'
 
 import { query, mutation } from './_generated/server'
 import { getUser, authorize, requireUser } from './lib/permissions'
-import { checkPermission, type PermissionContext } from './permissions.config'
+import { checkPermission } from './permissions.config'
 
 // ============================================
 // GET CURRENT ORG

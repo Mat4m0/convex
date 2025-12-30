@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { api } from '~~/convex/_generated/api'
+import type { Id } from '~~/convex/_generated/dataModel'
 
 /**
  * Test page for useConvexPaginatedQuery
@@ -35,8 +36,8 @@ async function handleAdd() {
   addCount.value++
 }
 
-async function handleRemove(id: string) {
-  await removeNote({ id: id as any })
+async function handleRemove(id: Id<'notes'>) {
+  await removeNote({ id })
   removeCount.value++
 }
 

@@ -5,7 +5,7 @@
  * Provides getUser, requireUser, authorize, and requireSameOrg.
  */
 
-import type { Doc, Id } from '../_generated/dataModel'
+import type { Id } from '../_generated/dataModel'
 import type { QueryCtx, MutationCtx } from '../_generated/server'
 
 import {

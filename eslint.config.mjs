@@ -13,5 +13,17 @@ export default createConfigForNuxt({
     src: ['./playground'],
   },
 }).append(
-  // your custom flat config here...
+  // Disable multi-word-component-names for Nuxt special files
+  {
+    files: [
+      '**/error.vue',
+      '**/layouts/**/*.vue',
+      '**/pages/index.vue',
+      '**/pages/**/index.vue',
+      '**/pages/[[]...slug].vue',
+    ],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
 )

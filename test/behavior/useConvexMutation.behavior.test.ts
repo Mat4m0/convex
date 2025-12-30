@@ -39,8 +39,8 @@ describe('useConvexMutation behavior', async () => {
       const page = await createPage('/test-realtime/notes')
       await page.waitForLoadState('networkidle')
 
-      // Get initial count
-      const initialCount = await page.textContent('[data-testid="count"]')
+      // Get initial count (stored for potential future use in assertions)
+      const _initialCount = await page.textContent('[data-testid="count"]')
 
       // WHEN we add a note via mutation
       const addBtn = await page.$('[data-testid="add-note-btn"]')

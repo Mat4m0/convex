@@ -89,6 +89,7 @@ export const clearAllData = mutation({
           const result = await ctx.runMutation(components.betterAuth.adapter.deleteMany, {
             input: { model: table, where: [] },
             paginationOpts: { numItems: 100, cursor: null },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Better Auth component typing
           } as any)
           totalDeleted += result.count
           hasMore = !result.isDone

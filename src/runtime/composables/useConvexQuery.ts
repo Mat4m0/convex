@@ -27,7 +27,6 @@ import {
   getCachedAuthToken,
   registerSubscription,
   hasSubscription,
-  cleanupSubscription,
   removeFromSubscriptionCache,
   buildThenableResult,
 } from '../utils/query-helpers'

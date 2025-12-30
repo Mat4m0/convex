@@ -10,7 +10,7 @@
 // ============================================
 // Ordered from most to least privileged
 
-const ROLES = ['owner', 'admin', 'member', 'viewer'] as const
+export const ROLES = ['owner', 'admin', 'member', 'viewer'] as const
 export type Role = (typeof ROLES)[number]
 
 // ============================================

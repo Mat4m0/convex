@@ -26,7 +26,7 @@ import { api } from '~/convex/_generated/api'
 const config = useRuntimeConfig()
 
 // Use useState for proper SSR -> client hydration
-const data = useState<any>('ssr-test-data', () => null)
+const data = useState<Record<string, unknown> | null>('ssr-test-data', () => null)
 const error = useState<string | null>('ssr-test-error', () => null)
 const renderedAt = useState('ssr-test-time', () => new Date().toISOString())
 const renderedOn = useState('ssr-test-where', () => import.meta.server ? 'Server' : 'Client')

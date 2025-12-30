@@ -7,7 +7,7 @@
 import { v } from 'convex/values'
 
 import { query, mutation } from './_generated/server'
-import { getUser, authorize, requireUser } from './lib/permissions'
+import { getUser, authorize } from './lib/permissions'
 import { checkPermission } from './permissions.config'
 
 // ============================================

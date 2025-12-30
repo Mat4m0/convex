@@ -20,7 +20,7 @@ const { data, pending, status, error } = useConvexQuery(
   api.notes.list,
   {},
   {
-    default: () => DEFAULT_DATA as any,
+    default: () => DEFAULT_DATA as typeof data.value,
     verbose: true,
   },
 )

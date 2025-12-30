@@ -66,7 +66,7 @@ describe('posts', () => {
 
   describe('list', () => {
     it('returns posts in users org only', async () => {
-      const { asUser1, asUser2, t, org1Id, org2Id } = await setupTestWithTwoOrgs()
+      const { asUser1, asUser2 } = await setupTestWithTwoOrgs()
 
       // User 1 creates a post
       const post1Id = await asUser1.mutation(api.posts.create, {
@@ -146,7 +146,7 @@ describe('posts', () => {
 
   describe('update', () => {
     it('allows members to update own posts', async () => {
-      const { asMember, t } = await setupTestWithMultipleUsers()
+      const { asMember } = await setupTestWithMultipleUsers()
 
       const postId = await asMember.mutation(api.posts.create, {
         title: 'Original',

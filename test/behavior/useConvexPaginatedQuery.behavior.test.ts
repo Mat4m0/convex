@@ -291,7 +291,7 @@ describe('useConvexPaginatedQuery behavior', async () => {
         await page.waitForTimeout(1000)
       }
 
-      const countBeforeReset = await page.textContent('[data-testid="count"]')
+      const _countBeforeReset = await page.textContent('[data-testid="count"]')
 
       // WHEN we click reset
       await page.click('[data-testid="reset-btn"]')

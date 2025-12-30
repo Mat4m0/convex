@@ -63,7 +63,7 @@ export type CheckPermissionFn<TPermission extends string = string> = (
  */
 export interface CreatePermissionsOptions<
   TPermission extends string = string,
-  TContext extends PermissionContext = PermissionContext,
+  _TContext extends PermissionContext = PermissionContext,
 > {
   /** Convex query that returns permission context (role, userId, orgId, etc.) */
   query: FunctionReference<'query'>

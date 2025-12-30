@@ -7,7 +7,7 @@ import type {
   PaginationOptions,
 } from 'convex/server'
 
-import { useNuxtApp, useRuntimeConfig, useRequestEvent, useAsyncData, useState } from '#imports'
+import { useNuxtApp, useRuntimeConfig, useRequestEvent, useAsyncData } from '#imports'
 import { convexToJson, type Value } from 'convex/values'
 import {
   ref,

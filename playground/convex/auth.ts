@@ -7,7 +7,7 @@ import type { DataModel } from './_generated/dataModel'
 import { components, internal } from './_generated/api'
 import { internalAction, mutation, query } from './_generated/server'
 import authConfig from './auth.config'
-import { getUser, buildPermissionContext } from './lib/permissions'
+// Note: getUser and buildPermissionContext are available from './lib/permissions' if needed
 
 // Get site URL from environment
 const siteUrl = process.env.SITE_URL!
@@ -140,11 +140,22 @@ export const createUserIfNeeded = mutation({
   },
 })
 
+interface DebugInfo {
+  hasIdentity: boolean
+  identitySubject?: string
+  hasUser?: boolean
+  userId?: string
+  orgId?: string
+  role?: string
+  reason?: string
+  context?: Record<string, unknown>
+}
+
 export const getPermissionContext = query({
   handler: async (ctx) => {
     // #region agent log
     const identity = await ctx.auth.getUserIdentity()
-    const debugInfo: any = { hasIdentity: !!identity, identitySubject: identity?.subject }
+    const debugInfo: DebugInfo = { hasIdentity: !!identity, identitySubject: identity?.subject }
     // #endregion
 
     if (!identity) {
@@ -169,13 +180,19 @@ export const getPermissionContext = query({
       // #region agent log
       debugInfo.reason = 'user not found in DB, needs to be created'
       // Return debug info for debugging
-      return { _debug: debugInfo } as any
+      return { _debug: debugInfo } as { _debug: DebugInfo }
       // #endregion
     }
 
     // Return permission context (even if no orgId - frontend will handle that)
     // If user has no orgId, return partial context so frontend can show create org form
-    const context: any = {
+    const context: {
+      role: string
+      userId: string
+      displayName?: string
+      email?: string
+      orgId?: string
+    } = {
       role: user.role,
       userId: user.authId,
       displayName: user.displayName,
@@ -191,7 +208,7 @@ export const getPermissionContext = query({
     debugInfo.context = context
     debugInfo.reason = user.organizationId ? 'success' : 'user has no organizationId'
     // Always attach debug info for debugging
-    return { ...context, _debug: debugInfo } as any
+    return { ...context, _debug: debugInfo }
     // #endregion
   },
 })
