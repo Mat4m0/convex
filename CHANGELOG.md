@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.3
+
+[compare changes](https://github.com/lupinum-dev/better-convex-nuxt/compare/v0.1.1...v0.1.3)
+
+### 🏡 Chore
+
+- **release:** V0.1.1 ([cd00ff4](https://github.com/lupinum-dev/better-convex-nuxt/commit/cd00ff4))
+
+### ❤️ Contributors
+
+- Mat4m0 <matthias.amon@me.com>
+
 ## v0.1.1
 
 
