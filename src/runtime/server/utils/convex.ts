@@ -69,14 +69,14 @@ export async function fetchQuery<Query extends FunctionReference<'query'>>(
   }
 
   try {
-    const response = await $fetch(`${convexUrl}/api/query`, {
+    const response = await fetch(`${convexUrl}/api/query`, {
       method: 'POST',
       headers,
-      body: {
+      body: JSON.stringify({
         path: functionPath,
         args: args ?? {},
-      },
-    })
+      }),
+    }).then((r) => r.json())
 
     const result = parseConvexResponse<FunctionReturnType<Query>>(response)
     log('Success', result)
@@ -139,14 +139,14 @@ export async function fetchMutation<Mutation extends FunctionReference<'mutation
   }
 
   try {
-    const response = await $fetch(`${convexUrl}/api/mutation`, {
+    const response = await fetch(`${convexUrl}/api/mutation`, {
       method: 'POST',
       headers,
-      body: {
+      body: JSON.stringify({
         path: functionPath,
         args: args ?? {},
-      },
-    })
+      }),
+    }).then((r) => r.json())
 
     const result = parseConvexResponse<FunctionReturnType<Mutation>>(response)
     log('Success', result)
@@ -209,14 +209,14 @@ export async function fetchAction<Action extends FunctionReference<'action'>>(
   }
 
   try {
-    const response = await $fetch(`${convexUrl}/api/action`, {
+    const response = await fetch(`${convexUrl}/api/action`, {
       method: 'POST',
       headers,
-      body: {
+      body: JSON.stringify({
         path: functionPath,
         args: args ?? {},
-      },
-    })
+      }),
+    }).then((r) => r.json())
 
     const result = parseConvexResponse<FunctionReturnType<Action>>(response)
     log('Success', result)

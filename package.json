@@ -35,6 +35,9 @@
     "*": {
       ".": [
         "./dist/types.d.mts"
+      ],
+      "server": [
+        "./dist/runtime/server/utils/convex.d.ts"
       ]
     }
   },
@@ -42,6 +45,10 @@
     ".": {
       "types": "./dist/types.d.mts",
       "import": "./dist/module.mjs"
+    },
+    "./server": {
+      "types": "./dist/runtime/server/utils/convex.d.ts",
+      "import": "./dist/runtime/server/utils/convex.js"
     }
   },
   "scripts": {
