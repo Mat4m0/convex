@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.8
+
+[compare changes](https://github.com/lupinum-dev/better-convex-nuxt/compare/v0.1.7...v0.1.8)
+
+### 🩹 Fixes
+
+- Update import path for useRuntimeConfig to use nitropack/runtime ([30fbc75](https://github.com/lupinum-dev/better-convex-nuxt/commit/30fbc75))
+
+### 🏡 Chore
+
+- **release:** V0.1.7 ([4bbcc22](https://github.com/lupinum-dev/better-convex-nuxt/commit/4bbcc22))
+
+### ❤️ Contributors
+
+- Mat4m0 <matthias.amon@me.com>
+
 ## v0.1.7
 
 [compare changes](https://github.com/lupinum-dev/better-convex-nuxt/compare/v0.1.6...v0.1.7)
