@@ -4,6 +4,7 @@ import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
 
 import { getFunctionName } from '../utils/convex-cache'
+import { createMutationLogger, getVerboseFlag } from '../utils/logger'
 import { useConvex } from './useConvex'
 
 /**
@@ -468,20 +469,10 @@ export function useConvexMutation<Mutation extends FunctionReference<'mutation'>
   type Result = FunctionReturnType<Mutation>
 
   const config = useRuntimeConfig()
-  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
+  const verbose = getVerboseFlag(config, options?.verbose)
 
   // Debug logger
-  const fnName = getFunctionName(mutation)
-  const log = verbose
-    ? (message: string, data?: unknown) => {
-        const prefix = `[useConvexMutation] ${fnName}: `
-        if (data !== undefined) {
-          console.log(prefix + message, data)
-        } else {
-          console.log(prefix + message)
-        }
-      }
-    : () => {}
+  const log = createMutationLogger(verbose, 'useConvexMutation', mutation)
 
   log('Initialized', { hasOptimisticUpdate: !!options?.optimisticUpdate })
 

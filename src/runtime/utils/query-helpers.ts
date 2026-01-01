@@ -1,9 +1,12 @@
 import type { useNuxtApp } from '#imports'
-import type { FunctionReference } from 'convex/server'
 
 import { useState } from '#imports'
 
-import { getFunctionName } from './convex-cache'
+import { createQueryLogger, type Logger } from './logger'
+
+// Re-export for backwards compatibility
+export type QueryLogger = Logger
+export { createQueryLogger }
 
 // Get the NuxtApp type from useNuxtApp return type
 type NuxtApp = ReturnType<typeof useNuxtApp>
@@ -18,59 +21,9 @@ type NuxtApp = ReturnType<typeof useNuxtApp>
 // ============================================================================
 
 /**
- * Logger function type for debug logging
- */
-export type QueryLogger = (message: string, data?: unknown) => void
-
-/**
  * Subscription cache stored on NuxtApp
  */
 export type SubscriptionCache = Record<string, (() => void) | undefined>
-
-// ============================================================================
-// Logger Factory
-// ============================================================================
-
-/**
- * Create a debug logger for query composables.
- *
- * @param verbose - Whether logging is enabled
- * @param composableName - Name of the composable (e.g., 'useConvexQuery')
- * @param query - The Convex query function reference
- * @returns Logger function that logs with environment prefix
- *
- * @example
- * ```ts
- * const log = createQueryLogger(options?.verbose ?? false, 'useConvexQuery', query)
- * log('Initializing', { lazy, server })
- * ```
- */
-export function createQueryLogger(
-  verbose: boolean,
-  composableName: string,
-  query: FunctionReference<'query'>,
-): QueryLogger {
-  if (!verbose) {
-    return () => {}
-  }
-
-  let fnName: string
-  try {
-    fnName = getFunctionName(query)
-  } catch {
-    fnName = 'unknown'
-  }
-
-  return (message: string, data?: unknown) => {
-    const env = import.meta.server ? '[SSR]' : '[Client]'
-    const prefix = `[${composableName}] ${env} ${fnName}: `
-    if (data !== undefined) {
-      console.log(prefix + message, data)
-    } else {
-      console.log(prefix + message)
-    }
-  }
-}
 
 // ============================================================================
 // Auth Token Fetching

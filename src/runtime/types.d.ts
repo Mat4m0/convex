@@ -10,6 +10,23 @@ declare module '#app' {
     /** Internal cache for WebSocket subscriptions (prevents duplicates) */
     _convexSubscriptions?: Record<string, () => void>
   }
+
+  interface RuntimeConfig {
+    public: {
+      convex: {
+        /** Convex deployment URL (WebSocket) */
+        url: string
+        /** Convex site URL (HTTP/Auth) */
+        siteUrl: string
+        /** Enable verbose logging for debugging */
+        verbose: boolean
+        /** @deprecated Use siteUrl instead */
+        auth?: {
+          url: string
+        }
+      }
+    }
+  }
 }
 
 declare module 'vue' {

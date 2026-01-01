@@ -1,5 +1,6 @@
 import { ref, readonly, computed, onMounted, onUnmounted } from 'vue'
 
+import { createLogger, getVerboseFlag } from '../utils/logger'
 import { useConvex } from './useConvex'
 
 /**
@@ -67,19 +68,13 @@ export interface UseConvexConnectionStateOptions {
 export function useConvexConnectionState(options?: UseConvexConnectionStateOptions) {
   const client = useConvex()
   const config = useRuntimeConfig()
-  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
+  const verbose = getVerboseFlag(config, options?.verbose)
 
   // Debug logger
-  const log = verbose
-    ? (message: string, data?: unknown) => {
-        const prefix = '[useConvexConnectionState]: '
-        if (data !== undefined) {
-          console.log(prefix + message, data)
-        } else {
-          console.log(prefix + message)
-        }
-      }
-    : () => {}
+  const log = createLogger({
+    verbose,
+    prefix: '[bcn:useConvexConnectionState]',
+  })
 
   log('Initialized', { hasClient: !!client, isClient: import.meta.client })
 

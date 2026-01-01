@@ -3,6 +3,7 @@ import type { FunctionReference, FunctionArgs, FunctionReturnType } from 'convex
 import { useRuntimeConfig } from '#imports'
 
 import { parseConvexResponse, getFunctionName } from '../../utils/convex-cache'
+import { createLogger, getVerboseFlag } from '../../utils/logger'
 
 /**
  * Options for server-side Convex operations
@@ -48,18 +49,13 @@ export async function fetchQuery<Query extends FunctionReference<'query'>>(
 ): Promise<FunctionReturnType<Query>> {
   const functionPath = getFunctionName(query)
   const config = useRuntimeConfig()
-  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
+  const verbose = getVerboseFlag(config, options?.verbose)
 
-  const log = verbose
-    ? (message: string, data?: unknown) => {
-        const prefix = `[fetchQuery] ${functionPath}: `
-        if (data !== undefined) {
-          console.log(prefix + message, data)
-        } else {
-          console.log(prefix + message)
-        }
-      }
-    : () => {}
+  const log = createLogger({
+    verbose,
+    prefix: '[bcn:fetchQuery]',
+    functionName: functionPath,
+  })
 
   log('Starting', { args, hasAuth: !!options?.authToken })
 
@@ -119,18 +115,13 @@ export async function fetchMutation<Mutation extends FunctionReference<'mutation
 ): Promise<FunctionReturnType<Mutation>> {
   const functionPath = getFunctionName(mutation)
   const config = useRuntimeConfig()
-  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
+  const verbose = getVerboseFlag(config, options?.verbose)
 
-  const log = verbose
-    ? (message: string, data?: unknown) => {
-        const prefix = `[fetchMutation] ${functionPath}: `
-        if (data !== undefined) {
-          console.log(prefix + message, data)
-        } else {
-          console.log(prefix + message)
-        }
-      }
-    : () => {}
+  const log = createLogger({
+    verbose,
+    prefix: '[bcn:fetchMutation]',
+    functionName: functionPath,
+  })
 
   log('Starting', { args, hasAuth: !!options?.authToken })
 
@@ -190,18 +181,13 @@ export async function fetchAction<Action extends FunctionReference<'action'>>(
 ): Promise<FunctionReturnType<Action>> {
   const functionPath = getFunctionName(action)
   const config = useRuntimeConfig()
-  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
+  const verbose = getVerboseFlag(config, options?.verbose)
 
-  const log = verbose
-    ? (message: string, data?: unknown) => {
-        const prefix = `[fetchAction] ${functionPath}: `
-        if (data !== undefined) {
-          console.log(prefix + message, data)
-        } else {
-          console.log(prefix + message)
-        }
-      }
-    : () => {}
+  const log = createLogger({
+    verbose,
+    prefix: '[bcn:fetchAction]',
+    functionName: functionPath,
+  })
 
   log('Starting', { args, hasAuth: !!options?.authToken })
 

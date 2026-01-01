@@ -30,6 +30,7 @@ import {
   removeFromSubscriptionCache,
   buildThenableResult,
 } from '../utils/query-helpers'
+import { getVerboseFlag } from '../utils/logger'
 
 // Re-export for consumers
 export type { QueryStatus }
@@ -258,7 +259,7 @@ export function useConvexQuery<
   const lazy = options?.lazy ?? false
   const server = options?.server ?? true
   const subscribe = options?.subscribe ?? true
-  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
+  const verbose = getVerboseFlag(config, options?.verbose)
   const isPublic = options?.public ?? false
 
   // Get function name (needed for cache key and logging)

@@ -11,6 +11,8 @@
 
 import { defineNuxtPlugin, useState, useRuntimeConfig, useRequestEvent } from '#app'
 
+import { createLogger, getVerboseFlag } from './utils/logger'
+
 interface ConvexUser {
   id: string
   name: string
@@ -21,25 +23,12 @@ interface ConvexUser {
   updatedAt?: string
 }
 
-// Verbose logging helper for SSR debugging
-const getLog = (config: ReturnType<typeof useRuntimeConfig>) => {
-  const verbose = config.public.convex?.verbose ?? false
-  if (!verbose) {
-    return () => {}
-  }
-  return (message: string, data?: unknown) => {
-    const prefix = '[bcn:ssr] '
-    if (data !== undefined) {
-      console.log(prefix + message, data)
-    } else {
-      console.log(prefix + message)
-    }
-  }
-}
-
 export default defineNuxtPlugin(async () => {
   const config = useRuntimeConfig()
-  const log = getLog(config)
+  const log = createLogger({
+    verbose: getVerboseFlag(config),
+    prefix: '[bcn:ssr]',
+  })
   log('Plugin starting')
 
   // Get the H3 event for accessing cookies

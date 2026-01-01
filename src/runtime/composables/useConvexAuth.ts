@@ -1,5 +1,7 @@
 import { useState, computed, readonly, useRuntimeConfig } from '#imports'
 
+import { createLogger, getVerboseFlag } from '../utils/logger'
+
 interface ConvexUser {
   id: string
   name: string
@@ -39,18 +41,10 @@ export function useConvexAuth() {
 
   // Verbose logging helper
   const config = useRuntimeConfig()
-  const verbose = config.public.convex?.verbose ?? false
-  const log = verbose
-    ? (message: string, data?: unknown) => {
-        const env = import.meta.server ? '[SSR]' : '[Client]'
-        const prefix = `[bcn:auth] ${env} `
-        if (data !== undefined) {
-          console.log(prefix + message, data)
-        } else {
-          console.log(prefix + message)
-        }
-      }
-    : () => {}
+  const log = createLogger({
+    verbose: getVerboseFlag(config),
+    prefix: '[bcn:auth]',
+  })
   log('useConvexAuth called', {
     hasToken: !!token.value,
     hasUser: !!user.value,

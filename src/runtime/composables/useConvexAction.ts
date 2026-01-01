@@ -3,6 +3,7 @@ import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
 
 import { getFunctionName } from '../utils/convex-cache'
+import { createActionLogger, getVerboseFlag } from '../utils/logger'
 import { useConvex } from './useConvex'
 
 /**
@@ -123,20 +124,10 @@ export function useConvexAction<Action extends FunctionReference<'action'>>(
   type Result = FunctionReturnType<Action>
 
   const config = useRuntimeConfig()
-  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
+  const verbose = getVerboseFlag(config, options?.verbose)
 
   // Debug logger
-  const fnName = getFunctionName(action)
-  const log = verbose
-    ? (message: string, data?: unknown) => {
-        const prefix = `[useConvexAction] ${fnName}: `
-        if (data !== undefined) {
-          console.log(prefix + message, data)
-        } else {
-          console.log(prefix + message)
-        }
-      }
-    : () => {}
+  const log = createActionLogger(verbose, 'useConvexAction', action)
 
   log('Initialized')
 
