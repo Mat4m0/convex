@@ -258,7 +258,7 @@ export function useConvexQuery<
   const lazy = options?.lazy ?? false
   const server = options?.server ?? true
   const subscribe = options?.subscribe ?? true
-  const verbose = options?.verbose ?? false
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
   const isPublic = options?.public ?? false
 
   // Get function name (needed for cache key and logging)

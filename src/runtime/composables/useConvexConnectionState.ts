@@ -66,7 +66,8 @@ export interface UseConvexConnectionStateOptions {
  */
 export function useConvexConnectionState(options?: UseConvexConnectionStateOptions) {
   const client = useConvex()
-  const verbose = options?.verbose ?? false
+  const config = useRuntimeConfig()
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
 
   // Debug logger
   const log = verbose

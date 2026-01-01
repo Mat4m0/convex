@@ -1,5 +1,7 @@
 import type { FunctionReference, FunctionArgs, FunctionReturnType } from 'convex/server'
 
+import { useRuntimeConfig } from '#imports'
+
 import { parseConvexResponse, getFunctionName } from '../../utils/convex-cache'
 
 /**
@@ -45,7 +47,8 @@ export async function fetchQuery<Query extends FunctionReference<'query'>>(
   options?: FetchOptions,
 ): Promise<FunctionReturnType<Query>> {
   const functionPath = getFunctionName(query)
-  const verbose = options?.verbose ?? false
+  const config = useRuntimeConfig()
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
 
   const log = verbose
     ? (message: string, data?: unknown) => {
@@ -115,7 +118,8 @@ export async function fetchMutation<Mutation extends FunctionReference<'mutation
   options?: FetchOptions,
 ): Promise<FunctionReturnType<Mutation>> {
   const functionPath = getFunctionName(mutation)
-  const verbose = options?.verbose ?? false
+  const config = useRuntimeConfig()
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
 
   const log = verbose
     ? (message: string, data?: unknown) => {
@@ -185,7 +189,8 @@ export async function fetchAction<Action extends FunctionReference<'action'>>(
   options?: FetchOptions,
 ): Promise<FunctionReturnType<Action>> {
   const functionPath = getFunctionName(action)
-  const verbose = options?.verbose ?? false
+  const config = useRuntimeConfig()
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
 
   const log = verbose
     ? (message: string, data?: unknown) => {

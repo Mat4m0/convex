@@ -1,4 +1,4 @@
-import { useState, computed, readonly } from '#imports'
+import { useState, computed, readonly, useRuntimeConfig } from '#imports'
 
 interface ConvexUser {
   id: string
@@ -8,19 +8,6 @@ interface ConvexUser {
   image?: string
   createdAt?: string
   updatedAt?: string
-}
-
-// Verbose logging helper
-const log = (message: string, data?: unknown) => {
-  if (import.meta.dev) {
-    const env = import.meta.server ? '[SSR]' : '[Client]'
-    const prefix = `[bcn:auth] ${env} `
-    if (data !== undefined) {
-      console.log(prefix + message, data)
-    } else {
-      console.log(prefix + message)
-    }
-  }
 }
 
 /**
@@ -50,6 +37,20 @@ export function useConvexAuth() {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
+  // Verbose logging helper
+  const config = useRuntimeConfig()
+  const verbose = config.public.convex?.verbose ?? false
+  const log = verbose
+    ? (message: string, data?: unknown) => {
+        const env = import.meta.server ? '[SSR]' : '[Client]'
+        const prefix = `[bcn:auth] ${env} `
+        if (data !== undefined) {
+          console.log(prefix + message, data)
+        } else {
+          console.log(prefix + message)
+        }
+      }
+    : () => {}
   log('useConvexAuth called', {
     hasToken: !!token.value,
     hasUser: !!user.value,

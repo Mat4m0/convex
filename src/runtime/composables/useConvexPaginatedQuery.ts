@@ -298,7 +298,7 @@ export function useConvexPaginatedQuery<
   const lazy = options?.lazy ?? false
   const subscribe = options?.subscribe ?? true
   const isPublic = options?.public ?? false
-  const verbose = options?.verbose ?? false
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
 
   // Get function name (needed for cache key)
   const fnName = getFunctionName(query)

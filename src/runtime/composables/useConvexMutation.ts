@@ -467,7 +467,8 @@ export function useConvexMutation<Mutation extends FunctionReference<'mutation'>
   type Args = FunctionArgs<Mutation>
   type Result = FunctionReturnType<Mutation>
 
-  const verbose = options?.verbose ?? false
+  const config = useRuntimeConfig()
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
 
   // Debug logger
   const fnName = getFunctionName(mutation)

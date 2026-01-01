@@ -22,8 +22,12 @@ interface ConvexUser {
 }
 
 // Verbose logging helper for SSR debugging
-const log = (message: string, data?: unknown) => {
-  if (import.meta.dev) {
+const getLog = (config: ReturnType<typeof useRuntimeConfig>) => {
+  const verbose = config.public.convex?.verbose ?? false
+  if (!verbose) {
+    return () => {}
+  }
+  return (message: string, data?: unknown) => {
     const prefix = '[bcn:ssr] '
     if (data !== undefined) {
       console.log(prefix + message, data)
@@ -34,6 +38,8 @@ const log = (message: string, data?: unknown) => {
 }
 
 export default defineNuxtPlugin(async () => {
+  const config = useRuntimeConfig()
+  const log = getLog(config)
   log('Plugin starting')
 
   // Get the H3 event for accessing cookies
@@ -43,7 +49,6 @@ export default defineNuxtPlugin(async () => {
     return
   }
 
-  const config = useRuntimeConfig()
   // Use siteUrl (preferred) or fall back to auth.url for backwards compatibility
   const siteUrl = config.public.convex?.siteUrl || config.public.convex?.auth?.url
 

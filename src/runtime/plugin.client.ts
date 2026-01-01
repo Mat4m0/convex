@@ -36,8 +36,12 @@ declare module '#app' {
 }
 
 // Verbose logging helper for client debugging
-const log = (message: string, data?: unknown) => {
-  if (import.meta.dev) {
+const getLog = (config: ReturnType<typeof useRuntimeConfig>) => {
+  const verbose = config.public.convex?.verbose ?? false
+  if (!verbose) {
+    return () => {}
+  }
+  return (message: string, data?: unknown) => {
     const prefix = '[bcn:client] '
     if (data !== undefined) {
       console.log(prefix + message, data)
@@ -48,6 +52,8 @@ const log = (message: string, data?: unknown) => {
 }
 
 export default defineNuxtPlugin((nuxtApp) => {
+  const config = useRuntimeConfig()
+  const log = getLog(config)
   log('Plugin starting')
 
   // HMR-safe: Skip if already initialized (module-level vars persist across HMR)
@@ -57,7 +63,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
   nuxtApp._convexInitialized = true
 
-  const config = useRuntimeConfig()
   const convexUrl = config.public.convex?.url
   // siteUrl is the HTTP endpoint URL (for auth), defaults to url with .cloud -> .site
   const siteUrl =

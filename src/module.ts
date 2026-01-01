@@ -28,6 +28,12 @@ export interface ModuleOptions {
    * @default false
    */
   permissions?: boolean
+  /**
+   * Enable verbose logging for debugging.
+   * When true, logs detailed information about queries, mutations, auth, and SSR operations.
+   * @default false
+   */
+  verbose?: boolean
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -42,6 +48,7 @@ export default defineNuxtModule<ModuleOptions>({
     url: process.env.CONVEX_URL,
     siteUrl: process.env.CONVEX_SITE_URL,
     permissions: false,
+    verbose: false,
   },
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
@@ -58,6 +65,7 @@ export default defineNuxtModule<ModuleOptions>({
       {
         url: options.url || '',
         siteUrl: derivedSiteUrl,
+        verbose: options.verbose ?? false,
         // Keep auth.url for backwards compatibility
         auth: {
           url: options.auth?.url || derivedSiteUrl,

@@ -122,7 +122,8 @@ export function useConvexAction<Action extends FunctionReference<'action'>>(
   type Args = FunctionArgs<Action>
   type Result = FunctionReturnType<Action>
 
-  const verbose = options?.verbose ?? false
+  const config = useRuntimeConfig()
+  const verbose = options?.verbose ?? (config.public.convex?.verbose ?? false)
 
   // Debug logger
   const fnName = getFunctionName(action)
