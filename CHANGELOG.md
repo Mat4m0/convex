@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.7
+
+[compare changes](https://github.com/lupinum-dev/better-convex-nuxt/compare/v0.1.6...v0.1.7)
+
+### 💅 Refactors
+
+- Remove unused imports and enhance logger documentation ([9960d0a](https://github.com/lupinum-dev/better-convex-nuxt/commit/9960d0a))
+
+### 🏡 Chore
+
+- **release:** V0.1.6 ([b49b9f4](https://github.com/lupinum-dev/better-convex-nuxt/commit/b49b9f4))
+
+### ❤️ Contributors
+
+- Mat4m0 <matthias.amon@me.com>
+
 ## v0.1.6
 
 [compare changes](https://github.com/lupinum-dev/better-convex-nuxt/compare/v0.1.5...v0.1.6)
