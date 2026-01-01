@@ -154,6 +154,9 @@ export function createActionLogger(
  * This is a convenience function to avoid repeating the same pattern.
  *
  * @param config - Runtime config from useRuntimeConfig()
+ * @param config.public - Public runtime config
+ * @param config.public.convex - Convex-specific public config
+ * @param config.public.convex.verbose - Verbose logging flag
  * @param override - Optional override value (from options)
  * @returns Whether verbose logging is enabled
  */

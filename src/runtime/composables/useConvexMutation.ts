@@ -3,7 +3,6 @@ import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex
 
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
 
-import { getFunctionName } from '../utils/convex-cache'
 import { createMutationLogger, getVerboseFlag } from '../utils/logger'
 import { useConvex } from './useConvex'
 
