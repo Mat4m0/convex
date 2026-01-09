@@ -217,6 +217,36 @@ export function useConvexQuery<
     },
   )
 
+  // Compute corrected pending value for server: false case
+  // When server: false, Nuxt's useAsyncData reports pending=false on SSR (no active fetch)
+  // but data WILL be fetched on client, so we should report pending=true
+  const effectivePending = computed((): boolean => {
+    if (isSkipped.value) return false
+
+    // When server: false, report pending until data arrives
+    if (!server) {
+      // On server: always pending (no SSR fetch)
+      if (import.meta.server) return true
+
+      // On client: pending until we have data
+      const hasData = asyncData.data.value !== null && asyncData.data.value !== undefined
+      if (!hasData) return true
+    }
+
+    // Default to asyncData's pending state
+    return asyncData.pending.value
+  })
+
+  // Compute corrected status using the effective pending value
+  const effectiveStatus = computed((): QueryStatus => {
+    return computeQueryStatus(
+      isSkipped.value,
+      asyncData.error.value !== null,
+      effectivePending.value,
+      asyncData.data.value !== null && asyncData.data.value !== undefined
+    )
+  })
+
   // Track subscription for cleanup
   let unsubscribeFn: (() => void) | null = null
 
@@ -328,5 +358,20 @@ export function useConvexQuery<
     })
   }
 
-  return asyncData as AsyncData<DataT | undefined, Error | null>
+  // Create wrapper that preserves AsyncData interface but overrides pending/status
+  // Spread asyncData properties, override pending/status, and preserve thenable behavior
+  const wrappedResult = {
+    ...asyncData,
+    pending: effectivePending,
+    status: effectiveStatus,
+  }
+
+  // Preserve thenable behavior by binding then/catch to the original asyncData
+  // This is needed because spreading loses the proper `this` context for these methods
+  Object.defineProperty(wrappedResult, 'then', {
+    value: asyncData.then.bind(asyncData),
+    enumerable: false,
+  })
+
+  return wrappedResult as AsyncData<DataT | undefined, Error | null>
 }
