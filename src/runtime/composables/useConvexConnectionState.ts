@@ -1,4 +1,5 @@
 import { ref, readonly, computed, onMounted, onUnmounted } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 import { useConvex } from './useConvex'
 

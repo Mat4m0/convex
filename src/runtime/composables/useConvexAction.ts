@@ -1,6 +1,7 @@
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server'
 
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 import { getFunctionName } from '../utils/convex-cache'
 import { useConvex } from './useConvex'
