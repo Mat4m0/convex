@@ -31,7 +31,6 @@ import {
   registerSubscription,
   hasSubscription,
   removeFromSubscriptionCache,
-  buildThenableResult,
 } from '../utils/convex-cache'
 import { executeQueryHttp, executeQueryViaSubscription } from './useConvexQuery'
 
@@ -981,11 +980,10 @@ export function useConvexPaginatedQuery<
     clear,
   }
 
-  // Create thenable result (using shared helper)
-  return buildThenableResult(
-    resolvePromise,
-    resultData,
-  ) as UseConvexPaginatedQueryReturn<TransformedItem>
+  // Create thenable result by extending the promise with result data
+  const resultPromise = resolvePromise.then(() => resultData)
+  Object.assign(resultPromise, resultData)
+  return resultPromise as UseConvexPaginatedQueryReturn<TransformedItem>
 }
 
 // ============================================================================

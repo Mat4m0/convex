@@ -32,9 +32,8 @@ export {
 export { useAuthClient } from './useAuthClient'
 export {
   useConvexQuery,
+  getQueryKey,
   type QueryStatus,
-  type UseConvexQueryReturn,
-  type UseConvexQueryData,
   type UseConvexQueryOptions,
 } from './useConvexQuery'
 export { useConvexCached } from './useConvexCached'

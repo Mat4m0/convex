@@ -1,16 +1,18 @@
 import type { FunctionReference, FunctionArgs, FunctionReturnType } from 'convex/server'
-import type { Ref, ComputedRef } from 'vue'
+import type { Ref } from 'vue'
+import type { AsyncData } from '#app'
 
-import type { UseConvexQueryOptions, UseConvexQueryReturn } from './useConvexQuery'
-
+import type { UseConvexQueryOptions } from './useConvexQuery'
 import { useConvexQuery } from './useConvexQuery'
 
-type MaybeRef<T> = T | Ref<T> | ComputedRef<T>
+type MaybeRef<T> = T | Ref<T>
 
 /**
  * Convenience alias for `useConvexQuery` with `lazy: true`.
  *
  * Does not block client-side navigation. Query runs in background and shows loading state.
+ *
+ * @deprecated Use `useConvexQuery(query, args, { lazy: true })` instead.
  *
  * @example
  * ```vue
@@ -34,7 +36,7 @@ export function useLazyConvexQuery<
   query: Query,
   args?: MaybeRef<Args> | Args,
   options?: Omit<UseConvexQueryOptions<FunctionReturnType<Query>>, 'lazy'>,
-): UseConvexQueryReturn<FunctionReturnType<Query>> {
+): AsyncData<FunctionReturnType<Query> | undefined, Error | null> {
   return useConvexQuery(query, args, {
     ...options,
     lazy: true,

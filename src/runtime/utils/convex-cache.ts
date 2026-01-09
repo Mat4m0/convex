@@ -372,24 +372,3 @@ export function removeFromSubscriptionCache(nuxtApp: NuxtApp, cacheKey: string):
   cache[cacheKey] = undefined
 }
 
-// ============================================================================
-// Thenable Result Builder (DEPRECATED - will be removed with useAsyncData migration)
-// ============================================================================
-
-/**
- * Build a thenable result object that can be awaited.
- * Combines a Promise with reactive data properties.
- *
- * @deprecated Will be removed when migrating to useAsyncData
- * @param resolvePromise - The promise that resolves when data is ready
- * @param resultData - The reactive data object to attach
- * @returns A thenable object with both Promise and data properties
- */
-export function buildThenableResult<T extends object>(
-  resolvePromise: Promise<void>,
-  resultData: T,
-): T & Promise<T> {
-  const resultPromise = resolvePromise.then(() => resultData)
-  Object.assign(resultPromise, resultData)
-  return resultPromise as T & Promise<T>
-}

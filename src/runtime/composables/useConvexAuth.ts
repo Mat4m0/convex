@@ -1,4 +1,4 @@
-import { useState, computed, readonly, useRuntimeConfig } from '#imports'
+import { useState, computed, readonly, useRuntimeConfig} from '#imports'
 
 interface ConvexUser {
   id: string
