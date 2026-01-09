@@ -119,7 +119,9 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   // Expose for debugging
   if (typeof window !== 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).__convex_client__ = client
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (authClient) (window as any).__auth_client__ = authClient
   }
 

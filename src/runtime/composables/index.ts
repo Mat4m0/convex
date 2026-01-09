@@ -36,7 +36,6 @@ export {
   type QueryStatus,
   type UseConvexQueryOptions,
 } from './useConvexQuery'
-export { useConvexCached } from './useConvexCached'
 export {
   useConvexPaginatedQuery,
   type PaginationStatus,

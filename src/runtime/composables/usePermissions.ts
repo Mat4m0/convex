@@ -21,7 +21,7 @@
 import type { FunctionReference } from 'convex/server'
 
 import { useRouter } from '#imports'
-import { computed, watchEffect, type ComputedRef } from 'vue'
+import { computed, watchEffect, type ComputedRef, type Ref } from 'vue'
 
 import { useConvexQuery } from './useConvexQuery'
 
@@ -89,7 +89,7 @@ export interface UsePermissionsReturn<
   /** Whether user is authenticated with valid permission context */
   isAuthenticated: ComputedRef<boolean>
   /** Whether permission context is still loading */
-  isLoading: ComputedRef<boolean>
+  isLoading: Ref<boolean>
 }
 
 /**
