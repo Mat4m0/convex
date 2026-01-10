@@ -1,3 +1,4 @@
+import { useRuntimeConfig } from '#imports'
 import { ref, readonly, computed, onMounted, onUnmounted } from 'vue'
 
 import { createLogger, getVerboseFlag } from '../utils/logger'

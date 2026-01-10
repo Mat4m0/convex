@@ -1,6 +1,7 @@
 import type { OptimisticLocalStore } from 'convex/browser'
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server'
 
+import { useRuntimeConfig } from '#imports'
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
 
 import { createMutationLogger, getVerboseFlag } from '../utils/logger'
