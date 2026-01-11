@@ -19,14 +19,10 @@ import { ConvexClient } from 'convex/browser'
 
 import { createLogger, getVerboseFlag } from './utils/logger'
 
-interface TokenResponse {
-  data?: { token: string } | null
-  error?: unknown
-}
-
+// Type for authClient with convex plugin
 type AuthClientWithConvex = ReturnType<typeof createAuthClient> & {
   convex: {
-    token: () => Promise<TokenResponse>
+    token: () => Promise<{ data: { token: string } | null; error: unknown }>
   }
 }
 
@@ -87,14 +83,14 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Construct absolute URL for Better Auth (requires absolute URL, not relative)
     // Use current origin to proxy through Nuxt server routes (avoids CORS)
     const authBaseURL =
-      typeof window !== 'undefined' ? `${window.location.origin}/api/auth` : '/api/auth' // Fallback for SSR (shouldn't be used)
+      typeof window !== 'undefined' ? `${window.location.origin}/api/auth` : '/api/auth'
 
     log('Creating Better Auth client', { authBaseURL })
 
     authClient = createAuthClient({
       baseURL: authBaseURL,
       plugins: [
-        convexClient(), // Enables authClient.convex.token() for JWT retrieval
+        convexClient(), // Adds authClient.convex.token() for JWT retrieval
       ],
       fetchOptions: {
         credentials: 'include', // Required for cross-domain cookies
@@ -102,15 +98,15 @@ export default defineNuxtPlugin((nuxtApp) => {
     }) as AuthClientWithConvex
 
     // Token fetcher for Convex authentication
-    // Uses SSR token first, then falls back to Better Auth /convex/token endpoint
+    // Uses SSR token first, then fetches via authClient.convex.token()
     //
     // OPTIMIZATION: Track when we last validated/fetched a token to avoid redundant requests.
     // The Convex client calls fetchToken multiple times:
     // 1. First with forceRefreshToken: false (uses SSR token)
     // 2. Then with forceRefreshToken: true after server confirms (to schedule refresh)
     // We cache the token briefly to avoid the second call triggering a network request.
-    let lastTokenValidation = Date.now() // Start with "now" since SSR just validated the token
-    const TOKEN_CACHE_MS = 10000 // Don't re-fetch within 10 seconds of SSR validation
+    let lastTokenValidation = Date.now()
+    const TOKEN_CACHE_MS = 10000 // Don't re-fetch within 10 seconds
 
     const fetchToken = async ({
       forceRefreshToken,
@@ -122,7 +118,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       // Use SSR-hydrated token if available and not forcing refresh
       if (convexToken.value && !forceRefreshToken) {
         log('Using SSR-hydrated token')
-        // Mark validation time - SSR already validated this token
         lastTokenValidation = Date.now()
         return convexToken.value
       }
@@ -136,30 +131,53 @@ export default defineNuxtPlugin((nuxtApp) => {
         return convexToken.value
       }
 
-      // If we have no SSR token and no user state, we're not logged in
-      if (!convexToken.value && !convexUser.value) {
-        log('No SSR token or user, not authenticated')
-        return null
-      }
-
-      // We have SSR state, try to fetch fresh token from Better Auth
-      // The session cookie is HttpOnly so we can't check it directly,
-      // but we know we had a valid session during SSR
+      // Fetch fresh token from Better Auth via authClient.convex.token()
+      // This handles both SSR mode (refresh) and CSR-only mode (initial fetch)
       log('Fetching fresh token from auth server')
       try {
         const response = await authClient!.convex.token()
+
         if (response.error || !response.data?.token) {
           log('Token fetch failed', { error: response.error })
           convexToken.value = null
+          convexUser.value = null
           return null
         }
+
+        const token = response.data.token
         log('Token fetch succeeded')
-        convexToken.value = response.data.token
+        convexToken.value = token
         lastTokenValidation = Date.now()
-        return response.data.token
+
+        // Extract user from JWT payload (for CSR-only mode where SSR didn't hydrate user)
+        if (!convexUser.value) {
+          try {
+            const payloadBase64 = token.split('.')[1]
+            if (payloadBase64) {
+              const payload = JSON.parse(atob(payloadBase64))
+              if (payload.sub || payload.userId || payload.email) {
+                convexUser.value = {
+                  id: payload.sub || payload.userId || '',
+                  name: payload.name || '',
+                  email: payload.email || '',
+                  emailVerified: payload.emailVerified,
+                  image: payload.image,
+                }
+                log('User extracted from JWT', {
+                  userId: (convexUser.value as { id: string }).id,
+                })
+              }
+            }
+          } catch {
+            // Non-fatal: token is still valid, just couldn't extract user
+          }
+        }
+
+        return token
       } catch (error) {
         log('Token fetch error', { error: error instanceof Error ? error.message : error })
         convexToken.value = null
+        convexUser.value = null
         return null
       }
     }
