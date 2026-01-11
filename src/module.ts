@@ -264,6 +264,15 @@ export {}
         name: 'deleteFromPaginatedQuery',
         from: resolver.resolve('./runtime/composables/useConvexPaginatedQuery'),
       },
+      // File upload composables
+      {
+        name: 'useConvexFileUpload',
+        from: resolver.resolve('./runtime/composables/useConvexFileUpload'),
+      },
+      {
+        name: 'useConvexStorageUrl',
+        from: resolver.resolve('./runtime/composables/useConvexStorageUrl'),
+      },
     ])
 
     // 6b. Conditionally add permission composables

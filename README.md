@@ -113,6 +113,8 @@ async function handleLogin() {
 | `useConvexMutation`        | Execute mutations with optimistic updates            |
 | `useConvexAction`          | Execute Convex actions                               |
 | `useConvexPaginatedQuery`  | Paginated queries with `loadMore()`                  |
+| `useConvexFileUpload`      | Upload files to Convex storage with progress         |
+| `useConvexStorageUrl`      | Get reactive URLs for stored files                   |
 | `useConvexAuth`            | Authentication state (user, token, isAuthenticated)  |
 | `useConvexConnectionState` | WebSocket connection status                          |
 | `useConvexCached`          | Read cached query data                               |
@@ -154,6 +156,10 @@ pnpm test
 # Lint
 pnpm lint
 ```
+
+## Acknowledgements
+
+- File upload composables inspired by [nuxt-convex](https://github.com/onmax/nuxt-convex) by [@onmax](https://github.com/onmax)
 
 ## License
 

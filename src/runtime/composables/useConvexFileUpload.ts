@@ -1,0 +1,312 @@
+/**
+ * File upload composable for Convex storage.
+ *
+ * Inspired by nuxt-convex by @onmax (https://github.com/onmax/nuxt-convex)
+ */
+
+import type { FunctionArgs, FunctionReference } from 'convex/server'
+import { ref, computed, type Ref, type ComputedRef } from 'vue'
+import { useRuntimeConfig } from '#imports'
+
+import { getFunctionName } from '../utils/convex-cache'
+import { createModuleLogger, getLoggingOptions, createTimer } from '../utils/logger'
+import type { OperationCompleteEvent } from '../utils/logger'
+import { useConvex } from './useConvex'
+
+/**
+ * Upload status representing the current state of the upload
+ * - 'idle': not yet called or reset
+ * - 'pending': upload in progress
+ * - 'success': upload completed successfully
+ * - 'error': upload failed
+ */
+export type UploadStatus = 'idle' | 'pending' | 'success' | 'error'
+
+/**
+ * Return value from useConvexFileUpload
+ */
+export interface UseConvexFileUploadReturn {
+  /**
+   * Upload a file. Returns the storageId on success.
+   * Automatically tracks status, error, progress, and data.
+   * Throws on error (use try/catch or check error ref after).
+   */
+  upload: (file: File) => Promise<string>
+
+  /**
+   * StorageId from the last successful upload.
+   * undefined if upload hasn't succeeded yet.
+   */
+  data: Ref<string | undefined>
+
+  /**
+   * Upload status for explicit state management.
+   */
+  status: ComputedRef<UploadStatus>
+
+  /**
+   * True when upload is in progress.
+   * Equivalent to status === 'pending'.
+   */
+  pending: ComputedRef<boolean>
+
+  /**
+   * Upload progress from 0 to 100.
+   * Only updated during pending state.
+   */
+  progress: Ref<number>
+
+  /**
+   * Error from the last upload attempt.
+   * null if no error or upload hasn't been called.
+   */
+  error: Ref<Error | null>
+
+  /**
+   * Reset upload state back to idle.
+   * Clears error, data, and progress.
+   */
+  reset: () => void
+}
+
+/**
+ * Options for useConvexFileUpload
+ */
+export interface UseConvexFileUploadOptions {
+  /**
+   * Callback when upload completes successfully.
+   */
+  onSuccess?: (storageId: string, file: File) => void
+  /**
+   * Callback when an error occurs.
+   */
+  onError?: (error: Error, file: File) => void
+}
+
+/**
+ * Composable for uploading files to Convex file storage with progress tracking.
+ *
+ * Handles the complete upload flow:
+ * 1. Generating an upload URL via mutation
+ * 2. POSTing the file to that URL (with progress tracking via XHR)
+ * 3. Returning the resulting storageId
+ *
+ * API designed to match useConvexMutation for consistency:
+ * - `data` - storageId from last successful upload
+ * - `status` - 'idle' | 'pending' | 'success' | 'error'
+ * - `pending` - boolean shorthand for status === 'pending'
+ * - `progress` - upload progress 0-100
+ * - `error` - Error | null
+ *
+ * Note: File uploads only work on the client side.
+ *
+ * @example Basic usage with progress tracking
+ * ```vue
+ * <script setup>
+ * import { api } from '~/convex/_generated/api'
+ *
+ * const {
+ *   upload,
+ *   pending,
+ *   progress,
+ *   error,
+ *   data: storageId,
+ * } = useConvexFileUpload(api.files.generateUploadUrl)
+ *
+ * async function handleFile(event: Event) {
+ *   const input = event.target as HTMLInputElement
+ *   if (!input.files?.[0]) return
+ *
+ *   try {
+ *     const id = await upload(input.files[0])
+ *     console.log('Uploaded:', id)
+ *   } catch {
+ *     // error is automatically tracked
+ *   }
+ * }
+ * </script>
+ *
+ * <template>
+ *   <input type="file" @change="handleFile" :disabled="pending" />
+ *   <div v-if="pending">Uploading: {{ progress }}%</div>
+ *   <p v-if="error" class="error">{{ error.message }}</p>
+ * </template>
+ * ```
+ *
+ * @example With callbacks
+ * ```vue
+ * <script setup>
+ * import { api } from '~/convex/_generated/api'
+ *
+ * const { upload, pending, progress } = useConvexFileUpload(
+ *   api.files.generateUploadUrl,
+ *   {
+ *     onSuccess: (storageId, file) => {
+ *       console.log(`Uploaded ${file.name}: ${storageId}`)
+ *     },
+ *     onError: (error, file) => {
+ *       console.error(`Failed to upload ${file.name}:`, error)
+ *     },
+ *   }
+ * )
+ * </script>
+ * ```
+ *
+ * @example Saving storageId to a document
+ * ```vue
+ * <script setup>
+ * import { api } from '~/convex/_generated/api'
+ *
+ * const { upload, pending, progress } = useConvexFileUpload(api.files.generateUploadUrl)
+ * const { mutate: saveDocument } = useConvexMutation(api.documents.create)
+ *
+ * async function handleUpload(file: File, title: string) {
+ *   const storageId = await upload(file)
+ *   await saveDocument({ title, fileId: storageId })
+ * }
+ * </script>
+ * ```
+ */
+export function useConvexFileUpload<
+  Mutation extends FunctionReference<'mutation'>,
+>(
+  generateUploadUrlMutation: Mutation,
+  options?: UseConvexFileUploadOptions,
+): UseConvexFileUploadReturn {
+  const config = useRuntimeConfig()
+  const loggingOptions = getLoggingOptions(config.public.convex ?? {})
+  const logger = createModuleLogger(loggingOptions)
+  const fnName = getFunctionName(generateUploadUrlMutation)
+
+  // Internal state
+  const _status = ref<UploadStatus>('idle')
+  const error = ref<Error | null>(null) as Ref<Error | null>
+  const data = ref<string | undefined>(undefined) as Ref<string | undefined>
+  const progress = ref(0)
+
+  // Computed - matches useConvexMutation pattern
+  const status = computed(() => _status.value)
+  const pending = computed(() => _status.value === 'pending')
+
+  // Reset function
+  const reset = () => {
+    _status.value = 'idle'
+    error.value = null
+    data.value = undefined
+    progress.value = 0
+  }
+
+  // The upload function
+  const upload = async (file: File): Promise<string> => {
+    const client = useConvex()
+    const timer = createTimer()
+
+    if (!client) {
+      const err = new Error('ConvexClient not available - file uploads only work on client side')
+      _status.value = 'error'
+      error.value = err
+
+      logger.event({
+        event: 'operation:complete',
+        env: 'client',
+        type: 'mutation',
+        name: `${fnName}+upload`,
+        duration_ms: timer(),
+        outcome: 'error',
+        error: { type: 'ClientError', message: err.message },
+      } satisfies OperationCompleteEvent)
+
+      throw err
+    }
+
+    _status.value = 'pending'
+    error.value = null
+    progress.value = 0
+
+    try {
+      // Step 1: Get upload URL from Convex
+      const postUrl = await client.mutation(generateUploadUrlMutation, {} as FunctionArgs<Mutation>)
+
+      if (typeof postUrl !== 'string') {
+        throw new TypeError('generateUploadUrl mutation must return a string URL')
+      }
+
+      // Step 2: Upload file via XHR for progress tracking
+      const storageId = await new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', postUrl)
+        xhr.setRequestHeader('Content-Type', file.type)
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            progress.value = Math.round((event.loaded / event.total) * 100)
+          }
+        }
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText)
+              resolve(response.storageId)
+            } catch {
+              reject(new Error('Invalid response from upload endpoint'))
+            }
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`))
+          }
+        }
+
+        xhr.onerror = () => reject(new Error('Network error during upload'))
+        xhr.send(file)
+      })
+
+      _status.value = 'success'
+      data.value = storageId
+
+      logger.event({
+        event: 'operation:complete',
+        env: 'client',
+        type: 'mutation',
+        name: `${fnName}+upload`,
+        duration_ms: timer(),
+        outcome: 'success',
+        args_preview: `file: ${file.name} (${file.size} bytes)`,
+      } satisfies OperationCompleteEvent)
+
+      options?.onSuccess?.(storageId, file)
+      return storageId
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e))
+      _status.value = 'error'
+      error.value = err
+
+      logger.event({
+        event: 'operation:complete',
+        env: 'client',
+        type: 'mutation',
+        name: `${fnName}+upload`,
+        duration_ms: timer(),
+        outcome: 'error',
+        args_preview: `file: ${file.name} (${file.size} bytes)`,
+        error: {
+          type: err.name,
+          message: err.message,
+          retriable: true,
+        },
+      } satisfies OperationCompleteEvent)
+
+      options?.onError?.(err, file)
+      throw err
+    }
+  }
+
+  return {
+    upload,
+    data,
+    status,
+    pending,
+    progress,
+    error,
+    reset,
+  }
+}

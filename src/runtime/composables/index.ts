@@ -55,6 +55,16 @@ export {
   type DeleteFromPaginatedQueryOptions,
 } from './useConvexPaginatedQuery'
 
+// File upload composables
+export {
+  useConvexFileUpload,
+  type UploadStatus,
+  type UseConvexFileUploadReturn,
+  type UseConvexFileUploadOptions,
+} from './useConvexFileUpload'
+
+export { useConvexStorageUrl } from './useConvexStorageUrl'
+
 // Permission composables (opt-in via module config)
 export {
   createPermissions,

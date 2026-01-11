@@ -34,9 +34,9 @@ const { data, pending, status } = await useConvexQuery(api.notes.listDelayed, {}
     <!-- Skeleton loading state -->
     <div v-if="pending" class="notes-list">
       <div v-for="i in 5" :key="i" class="note-card skeleton">
-        <div class="skeleton-title"></div>
-        <div class="skeleton-content"></div>
-        <div class="skeleton-content short"></div>
+        <div class="skeleton-title"/>
+        <div class="skeleton-content"/>
+        <div class="skeleton-content short"/>
       </div>
     </div>
 
