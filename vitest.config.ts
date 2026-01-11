@@ -19,6 +19,16 @@ export default defineConfig({
 
     // Use projects for different test types
     projects: [
+      // Unit Tests: Pure utility function tests
+      // Fast (<1s) - run with `pnpm vitest --project=unit`
+      {
+        test: {
+          name: 'unit',
+          include: ['test/unit/**/*.test.ts'],
+          environment: 'node',
+        },
+      },
+
       // Convex Tests: Backend function tests
       // Uses convex-test with edge-runtime
       // Fast (~5s) - run with `pnpm test`
@@ -37,7 +47,7 @@ export default defineConfig({
       {
         test: {
           name: 'e2e',
-          include: ['test/**/*.test.ts'],
+          include: ['test/behavior/**/*.test.ts', 'test/basic.test.ts'],
           testTimeout: 60000,
         },
       },

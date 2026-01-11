@@ -8,7 +8,7 @@
 import { v } from 'convex/values'
 
 import { components } from './_generated/api'
-import { mutation, query } from './_generated/server'
+import { action, internalQuery, mutation, query } from './_generated/server'
 
 // All tables from schema.ts
 const ALL_TABLES = [
@@ -133,5 +133,54 @@ export const alwaysFails = query({
   args: {},
   handler: async () => {
     throw new Error('Intentional test error for E2E testing')
+  },
+})
+
+/**
+ * Mutation that always fails - for testing mutation error handling
+ */
+export const alwaysFailsMutation = mutation({
+  args: {},
+  handler: async () => {
+    throw new Error('Intentional mutation error for E2E testing')
+  },
+})
+
+/**
+ * Internal query for the test action to call
+ */
+export const getHealthData = internalQuery({
+  args: {},
+  handler: async () => {
+    return {
+      serverTime: Date.now(),
+      status: 'healthy',
+    }
+  },
+})
+
+/**
+ * Simple test action - for testing useConvexAction
+ * Returns the input value after a small delay (simulates work)
+ */
+export const echo = action({
+  args: { message: v.string() },
+  handler: async (_ctx, args) => {
+    // Simulate some async work
+    await new Promise(resolve => setTimeout(resolve, 100))
+    return {
+      echoed: args.message,
+      timestamp: Date.now(),
+    }
+  },
+})
+
+/**
+ * Action that always fails - for testing action error handling
+ */
+export const alwaysFailsAction = action({
+  args: {},
+  handler: async () => {
+    throw new Error('Intentional action error for E2E testing')
   },
 })
