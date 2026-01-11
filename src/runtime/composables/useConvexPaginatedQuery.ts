@@ -31,6 +31,11 @@ import {
   hasSubscription,
   removeFromSubscriptionCache,
 } from '../utils/convex-cache'
+import {
+  argsMatch as sharedArgsMatch,
+  compareJsonValues as sharedCompareJsonValues,
+  generatePaginationId,
+} from '../utils/shared-helpers'
 import { executeQueryHttp, executeQueryViaSubscription } from './useConvexQuery'
 
 /**
@@ -209,11 +214,12 @@ interface PageState<T> {
   unsubscribe: (() => void) | null
 }
 
-// Generate unique pagination ID for cache-busting
-let paginationId = 0
+/**
+ * Generate unique pagination ID for cache-busting.
+ * Uses shared utility with proper WeakMap-based cleanup.
+ */
 function nextPaginationId(): number {
-  paginationId++
-  return paginationId
+  return generatePaginationId()
 }
 
 /**
@@ -381,7 +387,7 @@ export function useConvexPaginatedQuery<
 
     const functionPath = getFunctionName(query)
     const currentArgs = getArgs() as PaginatedQueryArgs<Query>
-    const siteUrl = config.public.convex?.siteUrl || config.public.convex?.auth?.url
+    const siteUrl = config.public.convex?.siteUrl
 
     const fullArgs = {
       ...currentArgs,
@@ -1353,65 +1359,20 @@ export function deleteFromPaginatedQuery<Query extends PaginatedQueryReference>(
 // ============================================================================
 
 /**
- * Check if query args match the filter args
+ * Check if query args match the filter args.
+ * Uses shared deep equality from utilities, skips paginationOpts.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function argsMatch(queryArgs: Record<string, any>, filterArgs: Record<string, any>): boolean {
-  for (const key of Object.keys(filterArgs)) {
-    // Skip paginationOpts - we don't match on those
-    if (key === 'paginationOpts') continue
-
-    const filterValue = filterArgs[key]
-    const queryValue = queryArgs[key]
-
-    // Deep equality check using JSON
-    if (JSON.stringify(filterValue) !== JSON.stringify(queryValue)) {
-      return false
-    }
-  }
-  return true
+function argsMatch(
+  queryArgs: Record<string, unknown>,
+  filterArgs: Record<string, unknown>,
+): boolean {
+  return sharedArgsMatch(queryArgs, filterArgs, ['paginationOpts'])
 }
 
 /**
  * Compare two JSON values for sorting.
- * Returns negative if a < b, 0 if equal, positive if a > b.
+ * Uses shared comparison utility.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function compareJsonValues(a: any, b: any): number {
-  // Handle arrays (multi-key sort)
-  if (Array.isArray(a) && Array.isArray(b)) {
-    for (let i = 0; i < Math.max(a.length, b.length); i++) {
-      const comparison = compareJsonValues(a[i], b[i])
-      if (comparison !== 0) return comparison
-    }
-    return 0
-  }
-
-  // Handle null/undefined
-  if (a == null && b == null) return 0
-  if (a == null) return -1
-  if (b == null) return 1
-
-  // Handle numbers
-  if (typeof a === 'number' && typeof b === 'number') {
-    return a - b
-  }
-
-  // Handle strings
-  if (typeof a === 'string' && typeof b === 'string') {
-    return a.localeCompare(b)
-  }
-
-  // Handle booleans
-  if (typeof a === 'boolean' && typeof b === 'boolean') {
-    return (a ? 1 : 0) - (b ? 1 : 0)
-  }
-
-  // Handle BigInt ($integer format from convexToJson)
-  if (typeof a === 'object' && a.$integer && typeof b === 'object' && b.$integer) {
-    return Number(BigInt(a.$integer) - BigInt(b.$integer))
-  }
-
-  // Fallback to string comparison
-  return String(a).localeCompare(String(b))
+function compareJsonValues(a: unknown, b: unknown): number {
+  return sharedCompareJsonValues(a, b)
 }

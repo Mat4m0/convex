@@ -7,8 +7,23 @@ import {
   addServerHandler,
   addServerImports,
   addComponentsDir,
+  useLogger,
 } from '@nuxt/kit'
 import { defu } from 'defu'
+
+const logger = useLogger('better-convex-nuxt')
+
+/**
+ * Validate that a string is a valid URL.
+ */
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
 
 export interface LoggingOptions {
   /**
@@ -113,6 +128,16 @@ export default defineNuxtModule<ModuleOptions>({
   },
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
+
+    // Validate Convex URL format
+    if (options.url && !isValidUrl(options.url)) {
+      logger.warn(`Invalid Convex URL format: "${options.url}". Expected a valid URL like "https://your-app.convex.cloud"`)
+    }
+
+    // Validate site URL format if provided
+    if (options.siteUrl && !isValidUrl(options.siteUrl)) {
+      logger.warn(`Invalid Convex site URL format: "${options.siteUrl}". Expected a valid URL like "https://your-app.convex.site"`)
+    }
 
     // Derive siteUrl from url if not explicitly set (cloud -> site)
     const derivedSiteUrl =

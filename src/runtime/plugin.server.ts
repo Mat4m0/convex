@@ -14,24 +14,11 @@ import { defineNuxtPlugin, useState, useRuntimeConfig, useRequestEvent } from '#
 import { createModuleLogger, getLoggingOptions, createTimer } from './utils/logger'
 import type { PluginInitEvent, AuthChangeEvent } from './utils/logger'
 import { getCachedAuthToken, setCachedAuthToken } from './server/utils/auth-cache'
+import type { ConvexUser } from './utils/types'
+import { getCookie } from './utils/shared-helpers'
 
-interface ConvexUser {
-  id: string
-  name: string
-  email: string
-  emailVerified?: boolean
-  image?: string
-  createdAt?: string
-  updatedAt?: string
-}
-
-/**
- * Extract session token from cookie header
- */
-function extractSessionToken(cookieHeader: string): string | null {
-  const match = cookieHeader.match(/better-auth\.session_token=([^;]+)/)
-  return match ? match[1] : null
-}
+/** Session cookie name used by Better Auth */
+const SESSION_COOKIE_NAME = 'better-auth.session_token'
 
 /**
  * Decode user info from JWT payload
@@ -98,10 +85,10 @@ export default defineNuxtPlugin(async () => {
 
   // Get all cookies to forward
   const cookieHeader = event.headers.get('cookie')
-  const hasSessionCookie = cookieHeader?.includes('better-auth.session_token')
+  const sessionToken = getCookie(cookieHeader, SESSION_COOKIE_NAME)
 
   // Check if we have a session cookie
-  if (!cookieHeader || !hasSessionCookie) {
+  if (!cookieHeader || !sessionToken) {
     logger.event({
       event: 'plugin:init',
       env: 'server',
@@ -115,7 +102,6 @@ export default defineNuxtPlugin(async () => {
   // Get auth cache config
   const authCacheConfig = (config.public.convex as { authCache?: { enabled: boolean; ttl: number } })
     ?.authCache
-  const sessionToken = extractSessionToken(cookieHeader)
 
   try {
     let token: string | null = null

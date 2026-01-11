@@ -1,14 +1,9 @@
 import { useState, computed, readonly } from '#imports'
 
-interface ConvexUser {
-  id: string
-  name: string
-  email: string
-  emailVerified?: boolean
-  image?: string
-  createdAt?: string
-  updatedAt?: string
-}
+import type { ConvexUser } from '../utils/types'
+
+// Re-export for convenience
+export type { ConvexUser } from '../utils/types'
 
 /**
  * Composable for accessing Convex authentication state.

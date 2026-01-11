@@ -186,6 +186,9 @@ export function createPermissions<
    * Protect a page with permission requirements.
    * Redirects if user lacks permission.
    *
+   * Includes protection against rapid redirect loops by tracking
+   * pending navigation state.
+   *
    * @example
    * ```vue
    * <script setup>
@@ -206,19 +209,31 @@ export function createPermissions<
     // Create permission ref once at setup time
     const hasPermission = can(permission, resource)
 
+    // Track pending redirect to prevent double navigation
+    let pendingRedirect = false
+
     watchEffect(() => {
       // Wait for permissions to load
       if (isLoading.value) return
 
+      // Prevent multiple rapid redirects
+      if (pendingRedirect) return
+
       // Redirect to login if not authenticated
       if (!isAuthenticated.value) {
-        router.push(loginPath)
+        pendingRedirect = true
+        router.push(loginPath).finally(() => {
+          pendingRedirect = false
+        })
         return
       }
 
       // Redirect if user lacks permission
       if (!hasPermission.value) {
-        router.push(redirectTo)
+        pendingRedirect = true
+        router.push(redirectTo).finally(() => {
+          pendingRedirect = false
+        })
       }
     })
   }

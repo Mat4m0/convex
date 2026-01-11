@@ -11,7 +11,7 @@ import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event: H3Event) => {
   const config = useRuntimeConfig()
-  const siteUrl = config.public.convex?.siteUrl || config.public.convex?.auth?.url
+  const siteUrl = config.public.convex?.siteUrl
 
   if (!siteUrl) {
     throw createError({

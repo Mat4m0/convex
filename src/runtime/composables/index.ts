@@ -1,9 +1,8 @@
-export { useConvexAuth } from './useConvexAuth'
+export { useConvexAuth, type ConvexUser } from './useConvexAuth'
 export { useConvex } from './useConvex'
 export {
   useConvexConnectionState,
   type ConnectionState,
-  type UseConvexConnectionStateOptions,
 } from './useConvexConnectionState'
 export {
   useConvexMutation,
@@ -27,7 +26,6 @@ export {
   useConvexAction,
   type ActionStatus,
   type UseConvexActionReturn,
-  type UseConvexActionOptions,
 } from './useConvexAction'
 export { useAuthClient } from './useAuthClient'
 export {

@@ -18,6 +18,89 @@ export interface FetchOptions {
 }
 
 /**
+ * Internal type for operation type strings
+ */
+type ConvexOperationType = 'query' | 'mutation' | 'action'
+
+/**
+ * Execute a Convex operation via HTTP.
+ * Shared implementation for queries, mutations, and actions.
+ *
+ * @internal
+ */
+async function executeConvexOperation<T>(
+  convexUrl: string,
+  operationType: ConvexOperationType,
+  functionPath: string,
+  args: Record<string, unknown> | undefined,
+  options?: FetchOptions,
+): Promise<T> {
+  const config = useRuntimeConfig()
+  const loggingOptions = getLoggingOptions(config.public.convex ?? {})
+  const logger = createModuleLogger(loggingOptions)
+  const timer = createTimer()
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  if (options?.authToken) {
+    headers['Authorization'] = `Bearer ${options.authToken}`
+  }
+
+  try {
+    const response = await fetch(`${convexUrl}/api/${operationType}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        path: functionPath,
+        args: args ?? {},
+      }),
+    })
+
+    // Handle non-JSON responses gracefully
+    const contentType = response.headers.get('content-type')
+    if (!contentType?.includes('application/json')) {
+      const text = await response.text()
+      throw new Error(`Unexpected response type: ${contentType}. Body: ${text.slice(0, 200)}`)
+    }
+
+    const json = await response.json()
+    const result = parseConvexResponse<T>(json)
+
+    logger.event({
+      event: 'operation:complete',
+      env: 'server',
+      type: operationType,
+      name: functionPath,
+      duration_ms: timer(),
+      outcome: 'success',
+      args_preview: formatArgsPreview(args),
+    } satisfies OperationCompleteEvent)
+
+    return result
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error))
+
+    logger.event({
+      event: 'operation:complete',
+      env: 'server',
+      type: operationType,
+      name: functionPath,
+      duration_ms: timer(),
+      outcome: 'error',
+      args_preview: formatArgsPreview(args),
+      error: {
+        type: err.name,
+        message: err.message,
+      },
+    } satisfies OperationCompleteEvent)
+
+    throw error
+  }
+}
+
+/**
  * Execute a one-off query on the server via HTTP.
  * Useful in API routes, server middleware, or webhooks.
  *
@@ -42,61 +125,13 @@ export async function fetchQuery<Query extends FunctionReference<'query'>>(
   options?: FetchOptions,
 ): Promise<FunctionReturnType<Query>> {
   const functionPath = getFunctionName(query)
-  const config = useRuntimeConfig()
-  const loggingOptions = getLoggingOptions(config.public.convex ?? {})
-  const logger = createModuleLogger(loggingOptions)
-  const timer = createTimer()
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-
-  if (options?.authToken) {
-    headers['Authorization'] = `Bearer ${options.authToken}`
-  }
-
-  try {
-    const response = await fetch(`${convexUrl}/api/query`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        path: functionPath,
-        args: args ?? {},
-      }),
-    }).then((r) => r.json())
-
-    const result = parseConvexResponse<FunctionReturnType<Query>>(response)
-
-    logger.event({
-      event: 'operation:complete',
-      env: 'server',
-      type: 'query',
-      name: functionPath,
-      duration_ms: timer(),
-      outcome: 'success',
-      args_preview: formatArgsPreview(args),
-    } satisfies OperationCompleteEvent)
-
-    return result
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error))
-
-    logger.event({
-      event: 'operation:complete',
-      env: 'server',
-      type: 'query',
-      name: functionPath,
-      duration_ms: timer(),
-      outcome: 'error',
-      args_preview: formatArgsPreview(args),
-      error: {
-        type: err.name,
-        message: err.message,
-      },
-    } satisfies OperationCompleteEvent)
-
-    throw error
-  }
+  return executeConvexOperation<FunctionReturnType<Query>>(
+    convexUrl,
+    'query',
+    functionPath,
+    args as Record<string, unknown> | undefined,
+    options,
+  )
 }
 
 /**
@@ -127,61 +162,13 @@ export async function fetchMutation<Mutation extends FunctionReference<'mutation
   options?: FetchOptions,
 ): Promise<FunctionReturnType<Mutation>> {
   const functionPath = getFunctionName(mutation)
-  const config = useRuntimeConfig()
-  const loggingOptions = getLoggingOptions(config.public.convex ?? {})
-  const logger = createModuleLogger(loggingOptions)
-  const timer = createTimer()
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-
-  if (options?.authToken) {
-    headers['Authorization'] = `Bearer ${options.authToken}`
-  }
-
-  try {
-    const response = await fetch(`${convexUrl}/api/mutation`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        path: functionPath,
-        args: args ?? {},
-      }),
-    }).then((r) => r.json())
-
-    const result = parseConvexResponse<FunctionReturnType<Mutation>>(response)
-
-    logger.event({
-      event: 'operation:complete',
-      env: 'server',
-      type: 'mutation',
-      name: functionPath,
-      duration_ms: timer(),
-      outcome: 'success',
-      args_preview: formatArgsPreview(args),
-    } satisfies OperationCompleteEvent)
-
-    return result
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error))
-
-    logger.event({
-      event: 'operation:complete',
-      env: 'server',
-      type: 'mutation',
-      name: functionPath,
-      duration_ms: timer(),
-      outcome: 'error',
-      args_preview: formatArgsPreview(args),
-      error: {
-        type: err.name,
-        message: err.message,
-      },
-    } satisfies OperationCompleteEvent)
-
-    throw error
-  }
+  return executeConvexOperation<FunctionReturnType<Mutation>>(
+    convexUrl,
+    'mutation',
+    functionPath,
+    args as Record<string, unknown> | undefined,
+    options,
+  )
 }
 
 /**
@@ -212,59 +199,11 @@ export async function fetchAction<Action extends FunctionReference<'action'>>(
   options?: FetchOptions,
 ): Promise<FunctionReturnType<Action>> {
   const functionPath = getFunctionName(action)
-  const config = useRuntimeConfig()
-  const loggingOptions = getLoggingOptions(config.public.convex ?? {})
-  const logger = createModuleLogger(loggingOptions)
-  const timer = createTimer()
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-
-  if (options?.authToken) {
-    headers['Authorization'] = `Bearer ${options.authToken}`
-  }
-
-  try {
-    const response = await fetch(`${convexUrl}/api/action`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        path: functionPath,
-        args: args ?? {},
-      }),
-    }).then((r) => r.json())
-
-    const result = parseConvexResponse<FunctionReturnType<Action>>(response)
-
-    logger.event({
-      event: 'operation:complete',
-      env: 'server',
-      type: 'action',
-      name: functionPath,
-      duration_ms: timer(),
-      outcome: 'success',
-      args_preview: formatArgsPreview(args),
-    } satisfies OperationCompleteEvent)
-
-    return result
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error))
-
-    logger.event({
-      event: 'operation:complete',
-      env: 'server',
-      type: 'action',
-      name: functionPath,
-      duration_ms: timer(),
-      outcome: 'error',
-      args_preview: formatArgsPreview(args),
-      error: {
-        type: err.name,
-        message: err.message,
-      },
-    } satisfies OperationCompleteEvent)
-
-    throw error
-  }
+  return executeConvexOperation<FunctionReturnType<Action>>(
+    convexUrl,
+    'action',
+    functionPath,
+    args as Record<string, unknown> | undefined,
+    options,
+  )
 }

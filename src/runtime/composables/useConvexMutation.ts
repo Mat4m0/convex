@@ -7,6 +7,7 @@ import { useRuntimeConfig } from '#imports'
 import { getFunctionName } from '../utils/convex-cache'
 import { createModuleLogger, getLoggingOptions, createTimer, formatArgsPreview } from '../utils/logger'
 import type { OperationCompleteEvent } from '../utils/logger'
+import { argsMatch as sharedArgsMatch } from '../utils/shared-helpers'
 import { useConvex } from './useConvex'
 
 /**
@@ -314,23 +315,15 @@ export function deleteFromQuery<
 // ============================================================================
 
 /**
- * Check if query args match the filter args
+ * Check if query args match the filter args.
+ * Uses deep equality comparison from shared utilities.
  * @internal
  */
 function argsMatch(
   queryArgs: Record<string, unknown>,
   filterArgs: Record<string, unknown>,
 ): boolean {
-  for (const key of Object.keys(filterArgs)) {
-    const filterValue = filterArgs[key]
-    const queryValue = queryArgs[key]
-
-    // Deep equality check using JSON
-    if (JSON.stringify(filterValue) !== JSON.stringify(queryValue)) {
-      return false
-    }
-  }
-  return true
+  return sharedArgsMatch(queryArgs, filterArgs)
 }
 
 /**
