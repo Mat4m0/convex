@@ -3,7 +3,7 @@ import type { FunctionReference, FunctionArgs, FunctionReturnType } from 'convex
 import type { AsyncData } from '#app'
 
 import { useNuxtApp, useRuntimeConfig, useRequestEvent, useAsyncData } from '#imports'
-import { computed, watch, triggerRef, onUnmounted, toValue, isRef, type Ref } from 'vue'
+import { computed, watch, triggerRef, onUnmounted, toValue, isRef, isReactive, type Ref } from 'vue'
 
 import {
   getFunctionName,
@@ -151,6 +151,15 @@ export function useConvexQuery<
   // Get reactive args value
   const getArgs = (): Args => toValue(args) ?? ({} as Args)
   const isSkipped = computed(() => getArgs() === 'skip')
+
+  // Dev-mode warning for reactive() args (won't trigger re-fetches)
+  if (import.meta.dev && args !== undefined && !isRef(args) && isReactive(args)) {
+    console.warn(
+      `[useConvexQuery] Detected reactive() object passed as args for "${fnName}". ` +
+        `Changes to reactive objects will NOT trigger query re-fetches. ` +
+        `Use ref() or computed() instead.`,
+    )
+  }
 
   // Generate cache key
   const getCacheKey = (): string => {

@@ -66,6 +66,13 @@ export interface ModuleOptions {
   /** Convex site URL (HTTP/Auth) - e.g., https://your-app.convex.site. Auto-derived from url if not set. */
   siteUrl?: string
   /**
+   * Additional trusted origins for CORS validation on the auth proxy.
+   * By default, only requests from the origin matching siteUrl are allowed.
+   * Supports wildcards for preview deployments (e.g., 'https://preview-*.vercel.app').
+   * @default []
+   */
+  trustedOrigins?: string[]
+  /**
    * Enable permission composables (createPermissions factory).
    * When true, auto-imports createPermissions for building usePermissions.
    * @default false
@@ -116,6 +123,7 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     url: process.env.CONVEX_URL,
     siteUrl: process.env.CONVEX_SITE_URL,
+    trustedOrigins: [],
     permissions: false,
     logging: {
       enabled: false,
@@ -149,6 +157,7 @@ export default defineNuxtModule<ModuleOptions>({
       {
         url: options.url || '',
         siteUrl: derivedSiteUrl,
+        trustedOrigins: options.trustedOrigins ?? [],
         logging: {
           enabled: options.logging?.enabled ?? false,
           format: options.logging?.format ?? 'pretty',

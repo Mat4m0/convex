@@ -16,6 +16,7 @@ import {
   onUnmounted,
   toValue,
   isRef,
+  isReactive,
   type ComputedRef,
   type Ref,
   shallowRef,
@@ -307,6 +308,15 @@ export function useConvexPaginatedQuery<
 
   // Get reactive args value
   const getArgs = (): Args => toValue(args) ?? ({} as Args)
+
+  // Dev-mode warning for reactive() args (won't trigger re-fetches)
+  if (import.meta.dev && args !== undefined && !isRef(args) && isReactive(args)) {
+    console.warn(
+      `[useConvexPaginatedQuery] Detected reactive() object passed as args for "${fnName}". ` +
+        `Changes to reactive objects will NOT trigger query re-fetches. ` +
+        `Use ref() or computed() instead.`,
+    )
+  }
 
   // Check if query is statically skipped
   const isStaticSkip = !isRef(args) && getArgs() === 'skip'
